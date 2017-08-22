@@ -32,8 +32,7 @@ class GuideTest {
 
 # kotlinx.coroutines by example tl;dr
 
-Kotlin's standard library provides low-level coroutine APIs mostly for libraries. Common language keywords like `async` and `await` are not included in the standard library. Use `kotlinx.coroutines` as high-level 
-coroutine-enabled primitives(`async` and `await`). For the `kotlinx-coroutines-core` module, see 
+Kotlin's standard library provides low-level coroutine APIs mostly for libraries, but common language keywords like `async` and `await` are not included. Use `kotlinx.coroutines` as high-level coroutine-enabled primitives(`async` and `await`). For the `kotlinx-coroutines-core` module, see 
 [this](README.md#using-in-your-projects)
 
 ## Table of contents
@@ -123,7 +122,7 @@ World!
 
 Coroutines are light-weight threads launched with [launch] (a _coroutine builder_).
 Replace
-`launch(CommonPool) { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)`. to see the compiler error:
+`launch(CommonPool) { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)` to see a compiler error:
 
 ```
 Error: Kotlin: Suspend functions are only allowed to be called from a coroutine or another suspend function
@@ -197,7 +196,7 @@ Same result, but the main coroutine is not tied to the duration of the backgroun
 
 ### Extract function refactoring
 
-Refactor `launch(CommonPool) { ... }` into a separate function. "Extract function" refactoring provides a new function with the  `suspend` modifier ( a _suspending function_). The are called from within coroutines like regular functions, but can also call other suspending functions, like `delay`, to _suspend_ execution of the coroutine.
+Refactor `launch(CommonPool) { ... }` into a separate function. "Extract function" refactoring provides a new function with the  `suspend` modifier (a _suspending function_). They are called from within coroutines like regular functions, but can also call other suspending functions, like `delay`, to _suspend_ execution of the coroutine.
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -258,7 +257,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
 > Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-06.kt)
 
-It prints three lines and terminates:
+Outputs three lines and terminates:
 
 ```text
 I'm sleeping 0 ...
@@ -336,7 +335,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
 > Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-02.kt)
 
-It prints "I'm sleeping" after cancellation.
+Outputs "I'm sleeping" after cancellation.
 
 <!--- TEST 
 I'm sleeping 0 ...
@@ -379,7 +378,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
 > Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-03.kt)
 
-The loop can be cancelled. [isActive][CoroutineScope.isActive] is a property, available inside a coroutines via [CoroutineScope].
+The loop can be cancelled because [isActive][CoroutineScope.isActive] is a property inside coroutines via [CoroutineScope].
 
 <!--- TEST
 I'm sleeping 0 ...
@@ -430,7 +429,7 @@ main: Now I can quit.
 
 ### Run non-cancellable block
 
-Rarely, a suspending function in the `finally` block  is need, but doing so causes a [CancellationException], the coroutine has been cancelled. Use `run(NonCancellable) {...}`.
+Rarely, a suspending function in the `finally` block  is need, but doing so causes a [CancellationException], the coroutine is already cancelled. Use `run(NonCancellable) {...}`.
  
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -497,9 +496,9 @@ Exception in thread "main" kotlinx.coroutines.experimental.TimeoutException: Tim
 <!--- TEST STARTS_WITH -->
 
 The `TimeoutException` thrown by [withTimeout] is a private subclass of [CancellationException].
-A cancelled coroutine `CancellationException` is a normal reason for coroutine completion, however, using  `withTimeout` right inside the `main` function. 
+A cancelled coroutine throwing `CancellationException` is standard when using  `withTimeout` inside `main`. 
 
-Cancellation an exception, all the resources will be closed in a usual way. Wrap the code with timeout in `try {...} catch (e: CancellationException) {...}` block for actions on timeout.
+On cancellation exception, all resources will be closed. Wrap the timeout in a `try {...} catch (e: CancellationException) {...}` block, to perform actions on timeout.
 
 ## Composing suspending functions
 
@@ -1425,7 +1424,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
 > You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-channel-08.kt)
 
-It prints "sending" _five_ times using a buffered channel with capacity of _four_:
+Outputs "sending" _five_ times using a buffered channel with capacity of _four_:
 
 ```text
 Sending 0
