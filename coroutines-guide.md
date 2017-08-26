@@ -502,13 +502,9 @@ On cancellation exception, all resources will be closed. Wrap the timeout in a `
 
 ## Composing suspending functions
 
-This section covers various approaches to composition of suspending functions.
-
 ### Sequential by default
 
-Assume that we have two suspending functions defined elsewhere that do something useful like some kind of 
-remote service call or computation. We just pretend they are useful, but actually each one just
-delays for a second for the purpose of this example:
+To invoke suspending functions defined elsewhere _sequentially_:
 
 <!--- INCLUDE .*/example-compose-([0-9]+).kt
 import kotlin.system.measureTimeMillis
@@ -528,14 +524,10 @@ suspend fun doSomethingUsefulTwo(): Int {
 
 <!--- INCLUDE .*/example-compose-([0-9]+).kt -->
 
-What do we do if need to invoke them _sequentially_ -- first `doSomethingUsefulOne` _and then_ 
-`doSomethingUsefulTwo` and compute the sum of their results? 
-In practise we do this if we use the results of the first function to make a decision on whether we need 
-to invoke the second one or to decide on how to invoke it.
+-- first `doSomethingUsefulOne` _and then_ 
+`doSomethingUsefulTwo` and compute the sum of their results. Useful if we use the first results to decide on second function invocation.
 
-We just use a normal sequential invocation, because the code in the coroutine, just like in the regular 
-code, is _sequential_ by default. The following example demonstrates it by measuring the total 
-time it takes to execute both suspending functions:
+Sequential invocation is _sequential_ by default:
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -550,7 +542,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
 > Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-01.kt)
 
-It produces something like this:
+Output:
 
 ```text
 The answer is 42
@@ -561,14 +553,9 @@ Completed in 2017 ms
 
 ### Concurrent using async
 
-What if there are no dependencies between invocation of `doSomethingUsefulOne` and `doSomethingUsefulTwo` and
-we want to get the answer faster, by doing both _concurrently_? This is where [async] comes to help. 
+If both `doSomethingUsefulOne` and `doSomethingUsefulTwo` are independent we do both _concurrently_ with [async]
  
-Conceptually, [async] is just like [launch]. It starts a separate coroutine which is a light-weight thread 
-that works concurrently with all the other coroutines. The difference is that `launch` returns a [Job] and 
-does not carry any resulting value, while `async` returns a [Deferred] -- a light-weight non-blocking future
-that represents a promise to provide a result later. You can use `.await()` on a deferred value to get its eventual result,
-but `Deferred` is also a `Job`, so you can cancel it if needed.
+[async] is just like [launch], starting a separate coroutine but `launch` returns a [Job] with a resulting value, `async` returns a [Deferred] -- a light-weight non-blocking future, a promise to provide a result later. Use `.await()` to get the pending result, but like a `Job`, you can cancel it.
  
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -583,7 +570,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
 > Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-02.kt)
 
-It produces something like this:
+Output:
 
 ```text
 The answer is 42
@@ -592,15 +579,11 @@ Completed in 1017 ms
 
 <!--- TEST ARBITRARY_TIME -->
 
-This is twice as fast, because we have concurrent execution of two coroutines. 
-Note, that concurrency with coroutines is always explicit.
+2x fast, concurrency with coroutines is always explicit.
 
 ### Lazily started async
 
-There is a laziness option to [async] with [CoroutineStart.LAZY] parameter. 
-It starts coroutine only when its result is needed by some 
-[await][Deferred.await] or if a [start][Job.start] function 
-is invoked. Run the following example that differs from the previous one only by this option:
+With [async] use the [CoroutineStart.LAZY] parameter to start the coroutine when the result is needed by [await][Deferred.await] or if [start][Job.start] is invoked:
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -615,7 +598,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 
 > Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-03.kt)
 
-It produces something like this:
+Output:
 
 ```text
 The answer is 42
@@ -624,16 +607,14 @@ Completed in 2017 ms
 
 <!--- TEST ARBITRARY_TIME -->
 
-So, we are back to sequential execution, because we _first_ start and await for `one`, _and then_ start and await
+Execution is sequential,  we _first_ start and await for `one`, _and then_ start and await
 for `two`. It is not the intended use-case for laziness. It is designed as a replacement for
-the standard `lazy` function in cases when computation of the value involves suspending functions.
+the standard `lazy` function for computating values involving suspending functions.
 
 ### Async-style functions
 
-We can define async-style functions that invoke `doSomethingUsefulOne` and `doSomethingUsefulTwo`
-_asynchronously_ using [async] coroutine builder. It is a good style to name such functions with 
-either "async" prefix of "Async" suffix to highlight the fact that they only start asynchronous 
-computation and one needs to use the resulting deferred value to get the result.
+Use the [async] coroutine builder to call `doSomethingUsefulOne` and `doSomethingUsefulTwo`
+_asynchronously_ . Prefix these functions with "async" or "Async" suffix because they start asynchronous computation when you need the deferred value to get the result.
 
 ```kotlin
 // The result type of asyncSomethingUsefulOne is Deferred<Int>
@@ -647,12 +628,8 @@ fun asyncSomethingUsefulTwo() = async(CommonPool)  {
 }
 ```
 
-Note, that these `asyncXXX` function are **not** _suspending_ functions. They can be used from anywhere.
-However, their use always implies asynchronous (here meaning _concurrent_) execution of their action
-with the invoking code.
- 
-The following example shows their use outside of coroutine:  
- 
+`asyncXXX` functions are **not** _suspending_ functions, they can be used from anywhere. Invocation implies _concurrent_ execution:
+
 ```kotlin
 // note, that we don't have `runBlocking` to the right of `main` in this example
 fun main(args: Array<String>) {
@@ -680,14 +657,12 @@ Completed in 1085 ms
 ## Coroutine context and dispatchers
 
 We've already seen `launch(CommonPool) {...}`, `async(CommonPool) {...}`, `run(NonCancellable) {...}`, etc.
-In these code snippets [CommonPool] and [NonCancellable] are _coroutine contexts_. 
-This section covers other available choices.
+In these code snippets [CommonPool] and [NonCancellable] are _coroutine contexts_. There are more.
 
 ### Dispatchers and threads
 
-Coroutine context includes a [_coroutine dispatcher_][CoroutineDispatcher] which determines what thread or threads 
-the corresponding coroutine uses for its execution. Coroutine dispatcher can confine coroutine execution 
-to a specific thread, dispatch it to a thread pool, or let it run unconfined. Try the following example:
+Coroutine context includes a [_coroutine dispatcher_][CoroutineDispatcher] determining what thread/s the corresponding coroutine uses for execution. Coroutine dispatcher can confine coroutine execution 
+to a specific thread, dispatch it to a thread pool, or let it run unconfined:
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -708,9 +683,9 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-01.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-01.kt)
 
-It produces the following output (maybe in different order):
+Output order may vary:
 
 ```text
       'Unconfined': I'm working in thread main
@@ -721,17 +696,12 @@ It produces the following output (maybe in different order):
 
 <!--- TEST LINES_START_UNORDERED -->
 
-The difference between parent [coroutineContext][CoroutineScope.coroutineContext] and
-[Unconfined] context will be shown later.
-
 ### Unconfined vs confined dispatcher
  
-The [Unconfined] coroutine dispatcher starts coroutine in the caller thread, but only until the
-first suspension point. After suspension it resumes in the thread that is fully determined by the
-suspending function that was invoked. Unconfined dispatcher is appropriate when coroutine does not
-consume CPU time nor updates any shared data (like UI) that is confined to a specific thread. 
+The [Unconfined] coroutine dispatcher starts coroutine in the caller thread, until the
+first suspension point. After suspension it resumes in the thread of its next invokation. Unconfined dispatcher used when the coroutine does not consume CPU time nor updates shared data (like UI) that is confined to a specific thread. 
 
-On the other side, [coroutineContext][CoroutineScope.coroutineContext] property that is available inside the block of any coroutine
+[coroutineContext][CoroutineScope.coroutineContext] is a property available inside the block of any coroutine
 via [CoroutineScope] interface, is a reference to a context of this particular coroutine. 
 This way, a parent context can be inherited. The default context of [runBlocking], in particular,
 is confined to be invoker thread, so inheriting it has the effect of confining execution to
