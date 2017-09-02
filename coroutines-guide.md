@@ -698,14 +698,10 @@ Output order may vary:
 
 ### Unconfined vs confined dispatcher
  
-The [Unconfined] coroutine dispatcher starts coroutine in the caller thread, until the
-first suspension point. After suspension it resumes in the thread of its next invokation. Unconfined dispatcher used when the coroutine does not consume CPU time nor updates shared data (like UI) that is confined to a specific thread. 
+The [Unconfined] coroutine dispatcher starts coroutine in the caller thread, until the first suspension point. After suspension it resumes in the thread of its next invokation. Unconfined dispatcher is used when the coroutine does not consume CPU time nor updates shared data (like UI) that is confined to a specific thread. 
 
-[coroutineContext][CoroutineScope.coroutineContext] is a property available inside the block of any coroutine
-via [CoroutineScope] interface, is a reference to a context of this particular coroutine. 
-This way, a parent context can be inherited. The default context of [runBlocking], in particular,
-is confined to be invoker thread, so inheriting it has the effect of confining execution to
-this thread with a predictable FIFO scheduling.
+[coroutineContext][CoroutineScope.coroutineContext] is a property inside a coroutine block refrencing the context via [CoroutineScope] interface.
+A parent context can be inherited. [runBlocking] default context is confined to be invoker thread, inheriting it is the same as confining execution to this thread with predictable FIFO scheduling.
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -724,9 +720,9 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-02.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-02.kt)
 
-Produces the output: 
+Output: 
  
 ```text
       'Unconfined': I'm working in thread main
@@ -737,20 +733,17 @@ Produces the output:
 
 <!--- TEST LINES_START -->
  
-So, the coroutine that had inherited `coroutineContext` of `runBlocking {...}` continues to execute
-in the `main` thread, while the unconfined one had resumed in the default executor thread that [delay]
+The coroutine inheriting `coroutineContext` of `runBlocking {...}` continues to execute
+in the `main` thread, while the unconfined one resumed in the default executor thread that [delay]
 function is using.
 
 ### Debugging coroutines and threads
 
 Coroutines can suspend on one thread and resume on another thread with [Unconfined] dispatcher or 
 with a multi-threaded dispatcher like [CommonPool]. Even with a single-threaded dispatcher it might be hard to
-figure out what coroutine was doing what, where, and when. The common approach to debugging applications with 
-threads is to print the thread name in the log file on each log statement. This feature is universally supported
-by logging frameworks. When using coroutines, the thread name alone does not give much of a context, so 
-`kotlinx.coroutines` includes debugging facilities to make it easier. 
+figure out what coroutine was doing what, where, and when. It's common to debug threaded applications by printing the thread name in the log file on each log statement; a universally supported feature in logging frameworks. Thread name alone does not give much of a context with coroutines, `kotlinx.coroutines` includes debugging facilities to make it easier. 
 
-Run the following code with `-Dkotlinx.coroutines.debug` JVM option:
+Run with `-Dkotlinx.coroutines.debug` JVM option:
 
 ```kotlin
 fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
@@ -768,12 +761,11 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-03.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-03.kt)
 
-There are three coroutines. The main coroutine (#1) -- `runBlocking` one, 
-and two coroutines computing deferred values `a` (#2) and `b` (#3).
-They are all executing in the context of `runBlocking` and are confined to the main thread.
-The output of this code is:
+The three coroutines, main (#1) -- `runBlocking`, and two computing deferred values `a` (#2) and `b` (#3).
+All execute in the `runBlocking` context, confined to the main thread.
+Output:
 
 ```text
 [main @coroutine#2] I'm computing a piece of the answer
@@ -783,15 +775,13 @@ The output of this code is:
 
 <!--- TEST -->
 
-The `log` function prints the name of the thread in square brackets and you can see, that it is the `main`
-thread, but the identifier of the currently executing coroutine is appended to it. This identifier 
-is consecutively assigned to all created coroutines when debugging mode is turned on.
+`log` function prints the name of the thread in square brackets like `main` thread, with the currently executing coroutine's identifier appended. Debugging mode consecutively assigns the identifier to created coroutines.
 
-You can read more about debugging facilities in the documentation for [newCoroutineContext] function.
+See doccumentation for debugging facilities for [newCoroutineContext] function.
 
 ### Jumping between threads
 
-Run the following code with `-Dkotlinx.coroutines.debug` JVM option:
+Run `-Dkotlinx.coroutines.debug` JVM option:
 
 ```kotlin
 fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
@@ -809,11 +799,10 @@ fun main(args: Array<String>) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-04.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-04.kt)
 
-It demonstrates two new techniques. One is using [runBlocking] with an explicitly specified context, and
-the second one is using [run] function to change a context of a coroutine while still staying in the 
-same coroutine as you can see in the output below:
+Two new techniques, [runBlocking] with an explicitly specified context, and [run] function changing the context while staying in the same coroutine
+Output:
 
 ```text
 [Ctx1 @coroutine#1] Started in ctx1
@@ -825,8 +814,7 @@ same coroutine as you can see in the output below:
 
 ### Job in the context
 
-The coroutine [Job] is part of its context. The coroutine can retrieve it from its own context 
-using `coroutineContext[Job]` expression:
+Use `coroutineContext[Job]` to retrieve [Job] it from its context:
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -834,25 +822,20 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-05.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-05.kt)
 
-It produces something like
-
+Output:
 ```
 My job is BlockingCoroutine{Active}@65ae6ba4
 ```
 
 <!--- TEST lines.size == 1 && lines[0].startsWith("My job is BlockingCoroutine{Active}@") -->
 
-So, [isActive][CoroutineScope.isActive] in [CoroutineScope] is just a convenient shortcut for
-`coroutineContext[Job]!!.isActive`.
+[isActive][CoroutineScope.isActive] in [CoroutineScope] is a shortcut for `coroutineContext[Job]!!.isActive`.
 
 ### Children of a coroutine
 
-When [coroutineContext][CoroutineScope.coroutineContext] of a coroutine is used to launch another coroutine,
-the [Job] of the new coroutine becomes
-a _child_ of the parent coroutine's job. When the parent coroutine is cancelled, all its children
-are recursively cancelled, too. 
+Launching [Job]'s from [coroutineContext][CoroutineScope.coroutineContext] have parent-_child_ relationship, so cancelling the parent recursively cancels its children.
   
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -881,9 +864,9 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-06.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-06.kt)
 
-The output of this code is:
+Output:
 
 ```text
 job1: I have my own context and execute independently!
@@ -896,9 +879,7 @@ main: Who has survived request cancellation?
 
 ### Combining contexts
 
-Coroutine context can be combined using `+` operator. The context on the right-hand side replaces relevant entries
-of the context on the left-hand side. For example, a [Job] of the parent coroutine can be inherited, while 
-its dispatcher replaced:
+Use `+` operator to combine contexts, the right hand context replaces relevant entries for the left hand context. A [Job] of the parent coroutine can be inherited, while its dispatcher replaced:
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -919,9 +900,9 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-07.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-07.kt)
 
-The expected outcome of this code is: 
+Output:
 
 ```text
 job: I am a child of the request coroutine, but with a different dispatcher
@@ -960,7 +941,7 @@ fun main(args: Array<String>) = runBlocking(CoroutineName("main")) {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-08.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-08.kt)
 
 The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar to:
  
@@ -975,16 +956,7 @@ The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar t
 
 ### Cancellation via explicit job
 
-Let us put our knowledge about contexts, children and jobs together. Assume that our application has
-an object with a lifecycle, but that object is not a coroutine. For example, we are writing an Android application
-and launch various coroutines in the context of an Android activity to perform asynchronous operations to fetch 
-and update data, do animations, etc. All of these coroutines must be cancelled when activity is destroyed
-to avoid memory leaks. 
-  
-We can manage a lifecycle of our coroutines by creating an instance of [Job] that is tied to 
-the lifecycle of our activity. A job instance is created using [`Job()`][Job] factory function
-as the following example shows. We need to make sure that all the coroutines are started 
-with this job in their context and then a single invocation of [Job.cancel] terminates them all.
+In applications, objects with lifecycles launch coroutines performing asynch operations. The coroutines must be cancelled on object destruction, else memory leaks. Creat a parent [Job] tied to the objects lifecycle, and create new jobs with [`Job()`][Job] factory function with the parents context. Call the parent's [Job.cancel] to terminate the children.
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -1005,9 +977,9 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> You can get full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-09.kt)
+> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-09.kt)
 
-The output of this example is:
+Output:
 
 ```text
 Launched 10 coroutines
@@ -1019,9 +991,8 @@ Cancelling job!
 
 <!--- TEST -->
 
-As you can see, only the first three coroutines had printed a message and the others were cancelled 
-by a single  invocation of `job.cancel()`. So all we need to do in our hypothetical Android 
-application is to create a parent job object when activity is created, use it for child coroutines,
+The first three coroutines printed a message. The others were cancelled  via `job.cancel()`. In a hypothetical Android 
+application, create a parent job object when the activity is created, use it for child coroutines,
 and cancel it when activity is destroyed.
 
 ## Channels
