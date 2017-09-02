@@ -32,8 +32,10 @@ class GuideTest {
 
 # kotlinx.coroutines by example tl;dr
 
-Kotlin's standard library provides low-level coroutine APIs mostly for libraries, but common language keywords like `async` and `await` are not included. Use `kotlinx.coroutines` as high-level coroutine-enabled primitives(`async` and `await`). For the `kotlinx-coroutines-core` module, see 
-[this](README.md#using-in-your-projects)
+* Kotlin's standard library for low-level coroutine APIs mostly for libraries.
+* Common language keywords like `async` and `await` are not included.
+* `kotlinx.coroutines` is high-level coroutine-enabled primitives(`async` and `await`). 
+* See [`kotlinx-coroutines-core`](README.md#using-in-your-projects)
 
 ## Table of contents
 
@@ -111,7 +113,7 @@ fun main(args: Array<String>) {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-01.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-01.kt)
 
 ```text
 Hello,
@@ -120,7 +122,7 @@ World!
 
 <!--- TEST -->
 
-Coroutines are light-weight threads launched with [launch] (a _coroutine builder_).
+Coroutines are like light-weight threads launched with [launch] (a _coroutine builder_).
 Replace
 `launch(CommonPool) { ... }` with `thread { ... }` and `delay(...)` with `Thread.sleep(...)` to see a compiler error:
 
@@ -128,7 +130,7 @@ Replace
 Error: Kotlin: Suspend functions are only allowed to be called from a coroutine or another suspend function
 ```
 
-[delay] is a _suspending function_ that does not block a thread, but _suspends_ the coroutine, it's only called from other coroutines.
+[delay] is a _suspending function_, thread non blocking, _suspends_ the coroutine, only called from other coroutines.
 
 ### Bridging blocking and non-blocking worlds
 
@@ -145,7 +147,7 @@ fun main(args: Array<String>) = runBlocking<Unit> { // start main coroutine
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-02.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-02.kt)
 
 <!--- TEST
 Hello,
@@ -185,14 +187,14 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-03.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-03.kt)
 
 <!--- TEST
 Hello,
 World!
 -->
 
-Same result, but the main coroutine is not tied to the duration of the background job.
+Same result, but the main coroutine is not tied to the background job duration.
 
 ### Extract function refactoring
 
@@ -212,7 +214,7 @@ suspend fun doWorld() {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-04.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-04.kt)
 
 <!--- TEST
 Hello,
@@ -233,7 +235,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-05.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-05.kt)
 
 <!--- TEST lines.size == 1 && lines[0] == ".".repeat(100_000) -->
 
@@ -241,7 +243,7 @@ After one second 100K coroutines start and print a dot. Threads would produce an
 
 ### Coroutines are like daemon threads
 
-A long-running coroutine that prints "I'm sleeping" twice a second and then returns from the main function after a delay:
+A long-running coroutine that prints "I'm sleeping" twice a second, then returns from the main function after a delay:
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -255,7 +257,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-06.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-basic-06.kt)
 
 Outputs three lines and terminates:
 
@@ -267,7 +269,7 @@ I'm sleeping 2 ...
 
 <!--- TEST -->
 
-Active coroutines do not keep the process alive. They are like daemon threads.
+Like daemon threads, active coroutines do not keep the process alive.
 
 ## Cancellation and timeouts
 
@@ -291,7 +293,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ``` 
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-01.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-01.kt)
 
 Output:
 
@@ -309,7 +311,9 @@ Main invokes `job.cancel`, the other coroutine is cancelled, thus no output.
 
 ### Cancellation is cooperative
 
-Coroutine cancellation is _cooperative_. The suspending functions in `kotlinx.coroutines` are _cancellable_ and check for cancellation, throwing [CancellationException] when cancelled. A working coroutine that does not check for cancellation, cannot be cancelled:
+* Coroutine cancellation is _cooperative_. 
+* `kotlinx.coroutines` spending functions are _cancellable_, checking for cancellation, throwing [CancellationException] when cancelled. 
+* A working coroutine that does not check for cancellation, cannot be cancelled:
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -333,9 +337,9 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-02.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-02.kt)
 
-Outputs "I'm sleeping" after cancellation.
+Outputs "I'm sleeping" after cancellation:
 
 <!--- TEST 
 I'm sleeping 0 ...
@@ -350,7 +354,8 @@ main: Now I can quit.
 
 ### Making computation code cancellable
 
-There are two ways to cancel computation. Periodically invoke the suspending function [yield], or explicitly check the cancellation status. 
+* Periodically invoke the suspending function [yield]
+* Explicitly check the cancellation status. 
 
 Replace `while (i < 10)` in the previous example with `while (isActive)`. 
 
@@ -376,7 +381,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-03.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-03.kt)
 
 The loop can be cancelled because [isActive][CoroutineScope.isActive] is a property inside coroutines via [CoroutineScope].
 
@@ -412,7 +417,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ``` 
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-04.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-04.kt)
 
 Output:
 
@@ -455,7 +460,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ``` 
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-05.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-05.kt)
 
 <!--- TEST
 I'm sleeping 0 ...
@@ -469,7 +474,7 @@ main: Now I can quit.
 
 ### Timeout
 
-To cancel after a timeout, use [withTimeout].
+Cancel after a timeout using [withTimeout].
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -482,7 +487,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-06.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-cancel-06.kt)
 
 Output:
 
@@ -524,8 +529,7 @@ suspend fun doSomethingUsefulTwo(): Int {
 
 <!--- INCLUDE .*/example-compose-([0-9]+).kt -->
 
--- first `doSomethingUsefulOne` _and then_ 
-`doSomethingUsefulTwo` and compute the sum of their results. Useful if we use the first results to decide on second function invocation.
+-- first `doSomethingUsefulOne` _and then_ `doSomethingUsefulTwo` and compute the sum of their results. Useful if we use the first results to decide on second function invocation.
 
 Sequential invocation is _sequential_ by default:
 
@@ -540,7 +544,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-01.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-01.kt)
 
 Output:
 
@@ -568,7 +572,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-02.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-02.kt)
 
 Output:
 
@@ -596,7 +600,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-03.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-03.kt)
 
 Output:
 
@@ -647,7 +651,7 @@ fun main(args: Array<String>) {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-04.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-compose-04.kt)
 
 <!--- TEST ARBITRARY_TIME
 The answer is 42
@@ -657,12 +661,15 @@ Completed in 1085 ms
 ## Coroutine context and dispatchers
 
 We've already seen `launch(CommonPool) {...}`, `async(CommonPool) {...}`, `run(NonCancellable) {...}`, etc.
-In these code snippets [CommonPool] and [NonCancellable] are _coroutine contexts_. There are more.
+In these code snippets [CommonPool] and [NonCancellable] are _coroutine contexts_. Let's see more.
 
 ### Dispatchers and threads
 
-Coroutine context includes a [_coroutine dispatcher_][CoroutineDispatcher] determining what thread/s the corresponding coroutine uses for execution. Coroutine dispatcher can confine coroutine execution 
-to a specific thread, dispatch it to a thread pool, or let it run unconfined:
+Coroutine context includes a [_coroutine dispatcher_][CoroutineDispatcher] determining what thread/s the corresponding coroutine uses for execution. 
+Coroutine dispatcher can:
+* Confine coroutine execution to a specific thread
+* Dispatch it to a thread pool
+* Run unconfined
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -683,7 +690,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-01.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-01.kt)
 
 Output order may vary:
 
@@ -698,7 +705,7 @@ Output order may vary:
 
 ### Unconfined vs confined dispatcher
  
-The [Unconfined] coroutine dispatcher starts coroutine in the caller thread, until the first suspension point. After suspension it resumes in the thread of its next invokation. Unconfined dispatcher is used when the coroutine does not consume CPU time nor updates shared data (like UI) that is confined to a specific thread. 
+[Unconfined] coroutine dispatcher starts coroutines in the caller thread, until the first suspension point. After suspension it resumes in the thread of its next invokation. Unconfined dispatcher is used when the coroutine does not consume CPU time nor updates shared data (like UI) that is confined to a specific thread. 
 
 [coroutineContext][CoroutineScope.coroutineContext] is a property inside a coroutine block refrencing the context via [CoroutineScope] interface.
 A parent context can be inherited. [runBlocking] default context is confined to be invoker thread, inheriting it is the same as confining execution to this thread with predictable FIFO scheduling.
@@ -720,7 +727,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-02.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-02.kt)
 
 Output: 
  
@@ -741,7 +748,7 @@ function is using.
 
 Coroutines can suspend on one thread and resume on another thread with [Unconfined] dispatcher or 
 with a multi-threaded dispatcher like [CommonPool]. Even with a single-threaded dispatcher it might be hard to
-figure out what coroutine was doing what, where, and when. It's common to debug threaded applications by printing the thread name in the log file on each log statement; a universally supported feature in logging frameworks. Thread name alone does not give much of a context with coroutines, `kotlinx.coroutines` includes debugging facilities to make it easier. 
+figure out what coroutine was doing what, where, and when. Debugging threaded applications by logging thread name(universal logging framework feature), does not give context for coroutines. `kotlinx.coroutines` includes debugging facilities to make it easier.
 
 Run with `-Dkotlinx.coroutines.debug` JVM option:
 
@@ -761,9 +768,12 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-03.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-03.kt)
 
-The three coroutines, main (#1) -- `runBlocking`, and two computing deferred values `a` (#2) and `b` (#3).
+Three coroutines:
+* main (#1) -- `runBlocking`
+* two computing deferred values `a` (#2) and `b` (#3).
+
 All execute in the `runBlocking` context, confined to the main thread.
 Output:
 
@@ -799,9 +809,12 @@ fun main(args: Array<String>) {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-04.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-04.kt)
 
-Two new techniques, [runBlocking] with an explicitly specified context, and [run] function changing the context while staying in the same coroutine
+Two new techniques:
+* [runBlocking] with an explicitly specified context
+* [run] function changing the context while staying in the same coroutine
+
 Output:
 
 ```text
@@ -822,7 +835,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-05.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-05.kt)
 
 Output:
 ```
@@ -835,7 +848,8 @@ My job is BlockingCoroutine{Active}@65ae6ba4
 
 ### Children of a coroutine
 
-Launching [Job]'s from [coroutineContext][CoroutineScope.coroutineContext] have parent-_child_ relationship, so cancelling the parent recursively cancels its children.
+* Launching [Job]'s from [coroutineContext][CoroutineScope.coroutineContext] have a parent-_child_ relationship.
+* Cancelling the parent recursively cancels its children.
   
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -864,7 +878,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-06.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-06.kt)
 
 Output:
 
@@ -900,7 +914,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-07.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-07.kt)
 
 Output:
 
@@ -913,13 +927,8 @@ main: Who has survived request cancellation?
 
 ### Naming coroutines for debugging
 
-Automatically assigned ids are good when coroutines log often and you just need to correlate log records
-coming from the same coroutine. However, when coroutine is tied to the processing of a specific request
-or doing some specific background task, it is better to name it explicitly for debugging purposes.
-[CoroutineName] serves the same function as a thread name. It'll get displayed in the thread name that
-is executing this coroutine when debugging mode is turned on.
-
-The following example demonstrates this concept:
+During debugging, explicitly name coroutines tied to specific processing requests, or ones in background task.
+[CoroutineName] is displayed with the thread name during coroutine execution when debugging mode is turned on.
 
 ```kotlin
 fun log(msg: String) = println("[${Thread.currentThread().name}] $msg")
@@ -941,7 +950,7 @@ fun main(args: Array<String>) = runBlocking(CoroutineName("main")) {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-08.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-08.kt)
 
 The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar to:
  
@@ -956,7 +965,7 @@ The output it produces with `-Dkotlinx.coroutines.debug` JVM option is similar t
 
 ### Cancellation via explicit job
 
-In applications, objects with lifecycles launch coroutines performing asynch operations. The coroutines must be cancelled on object destruction, else memory leaks. Creat a parent [Job] tied to the objects lifecycle, and create new jobs with [`Job()`][Job] factory function with the parents context. Call the parent's [Job.cancel] to terminate the children.
+In applications, objects with lifecycles launch coroutines performing asynch operations. The coroutines must be cancelled on object destruction, else memory leaks. Create a parent [Job] tied to the objects lifecycle, and create new jobs with the parents context using [`Job()`][Job] factory function. Call the parent's [Job.cancel] to terminate both it, and it's children.
 
 ```kotlin
 fun main(args: Array<String>) = runBlocking<Unit> {
@@ -977,7 +986,7 @@ fun main(args: Array<String>) = runBlocking<Unit> {
 }
 ```
 
-> Full code [here](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-09.kt)
+> [Full code](kotlinx-coroutines-core/src/test/kotlin/guide/example-context-09.kt)
 
 Output:
 
@@ -992,7 +1001,7 @@ Cancelling job!
 <!--- TEST -->
 
 The first three coroutines printed a message. The others were cancelled  via `job.cancel()`. In a hypothetical Android 
-application, create a parent job object when the activity is created, use it for child coroutines,
+application, create a parent job object when the activity is created, use it to create child coroutines,
 and cancel it when activity is destroyed.
 
 ## Channels
