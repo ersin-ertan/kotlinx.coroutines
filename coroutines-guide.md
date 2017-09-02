@@ -1000,9 +1000,12 @@ Cancelling job!
 
 <!--- TEST -->
 
-The first three coroutines printed a message. The others were cancelled  via `job.cancel()`. In a hypothetical Android 
-application, create a parent job object when the activity is created, use it to create child coroutines,
-and cancel it when activity is destroyed.
+The first three coroutines printed a message. The others were cancelled  via `job.cancel()`.
+
+In a hypothetical Android application:
+* Create a parent job object when the activity is created
+* Use it to create child coroutines
+* Cancel it when activity is destroyed
 
 ## Channels
 
